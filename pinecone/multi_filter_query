@@ -1,0 +1,26 @@
+from pinecone import Pinecone
+
+# Initialize the Pinecone client using your API key
+pc = Pinecone(api_key="pcsk_3ZCPFh_96++++++++tRiXGYe")
+
+# Connect to your Pinecone index
+index = pc.Index('datacamp-index')
+
+# Example query vector (ensure this is the provided query vector you have)
+vector = [0.025525547564029694] * 1536  # Replace with the actual provided query vector
+
+# Metadata filter to match vectors where genre is 'thriller' and year is less than 2018
+metadata_filter = {
+    "genre": "thriller",
+    "year": {"$lt": 2018}
+}
+
+# Retrieve the most similar vector with genre and year filters
+query_result = index.query(
+    vector=vector,
+    top_k=1,
+    filter=metadata_filter
+)
+
+# Print the query results
+print(query_result)
