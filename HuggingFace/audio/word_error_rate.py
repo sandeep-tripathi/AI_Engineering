@@ -1,26 +1,34 @@
+import pandas as pd
 from transformers import pipeline
 import evaluate
 
-# Create an ASR pipeline using Meta's wav2vec model
+# Create an ASR pipeline using Meta's wav2vec2-base-960h model
 meta_asr = pipeline("automatic-speech-recognition", model="facebook/wav2vec2-base-960h")
 
-# Predict the text from the example audio
-example_audio = example["audio"]["path_to_audio_file"]  # Adjust the key to your data structure
-meta_pred = meta_asr(example_audio)["text"].lower()
-
-# Repeat for OpenAI's Whisper model
+# Repeat for OpenAI's whisper-tiny model
 open_asr = pipeline("automatic-speech-recognition", model="openai/whisper-tiny")
-open_pred = open_asr(example_audio)["text"].lower()
+
+# Create the data function
+def data(n=3):
+    for i in range(n):
+        yield english[i]["audio"]["array"], english[i]["sentence"].lower()
+
+# Predict the text for the audio file with both models
+output = []
+for audio, sentence in data():
+    meta_pred = meta_asr(audio)["text"].lower()
+    open_pred = open_asr(audio)["text"].lower()
+    # Append to the output list
+    output.append({"sentence": sentence, "metaPred": meta_pred, "openPred": open_pred})
+
+output_df = pd.DataFrame(output)
 
 # Create the word error rate metric
 wer = evaluate.load("wer")
 
-# Save the true sentence of the example
-true_sentence = example["sentence"].lower()  # Adjust the key to your data structure
+# Compute the WER for both models
+metaWER = wer.compute(predictions=output_df["metaPred"], references=output_df["sentence"])
+openWER = wer.compute(predictions=output_df["openPred"], references=output_df["sentence"])
 
-# Compute the wer for each model prediction
-meta_wer = wer.compute(predictions=[meta_pred], references=[true_sentence])
-open_wer = wer.compute(predictions=[open_pred], references=[true_sentence])
-
-# Print the WER for both models
-print(f"The WER for the Meta model is {meta_wer} and for the OpenAI model is {open_wer}")
+# Print the WER
+print(f"The WER for the Meta model is {metaWER} and for the OpenAI model is {openWER}")
