@@ -19,3 +19,10 @@ prompt_template = FewShotPromptTemplate(
 
 prompt = prompt_template.invoke({"input": "What is capital of France?"})
 print(prompt.text)
+
+# Create an OpenAI chat LLM
+llm = ChatOpenAI(model="gpt-4o-mini", api_key='<OPENAI_API_TOKEN>')
+
+# Create and invoke the chain
+llm_chain = prompt_template | llm
+print(llm_chain.invoke({"input": "What is capital of France?"}))
