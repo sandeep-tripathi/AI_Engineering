@@ -15,3 +15,13 @@ time_prompt = PromptTemplate(
 # Invoke the learning_prompt with an activity
 learning_plan = learning_prompt.invoke({"activity": "play golf"})
 print(learning_plan)
+
+
+# Complete the sequential chain with LCEL
+seq_chain = ({"learning_plan": learning_prompt | llm | StrOutputParser()}
+    | time_prompt
+    | llm
+    | StrOutputParser())
+
+# Call the chain
+print(seq_chain.invoke({"activity": "play golf"}))
